@@ -137,6 +137,9 @@
     <None Include="shader.fs" />
     <None Include="shader.vs" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="container.jpg" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

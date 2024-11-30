@@ -3,19 +3,23 @@
 #include <direct.h>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 #include "Shader.h"
 
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 600;
 float vertices[] = {
-  // 位置              // 顏色
-   0.5f, -0.5f, 0.0f,  1.0f, 0.0f, 0.0f,   // 右下
-  -0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,   // 左下
-   0.0f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f    // 頂部
+  //     ---- 位置 ----       ---- 顏色 ----     - 紋理坐標 -
+       0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // 右上
+       0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // 右下
+      -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // 左下
+      -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // 左上
 };
 unsigned int indices[] = {
   0, 1, 2,
+  0, 2, 3
 };
 
 void frameBufferSizeCallback(GLFWwindow* window, int width, int height);
@@ -38,6 +42,23 @@ int main() {
 
   Shader ourShader("./shader.vs", "./shader.fs");
 
+  // 讀取圖片
+  int width, height, nrChannels;
+  unsigned char* data = stbi_load("./container.jpg", &width, &height, &nrChannels, 0);
+
+  // 生成紋理以及Mipmap
+  unsigned int texture;
+  glGenTextures(1, &texture);
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  // 載入紋理
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+  glGenerateMipmap(GL_TEXTURE_2D);
+
   // 綁定 VBO, VAO, EBO
   unsigned int VBO, VAO, EBO;
   glGenVertexArrays(1, &VAO);
@@ -51,14 +72,18 @@ int main() {
 
   // 告訴OpenGL如何解析頂點數據
   // 位置屬性
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
   // 顏色屬性
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
+  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3*sizeof(float)));
   glEnableVertexAttribArray(1);
+  // 紋理坐標屬性
+  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float)));
+  glEnableVertexAttribArray(2);
 
-  // 解綁 VBO, VAO, EBO
+  // 解綁 VBO, VAO, EBO, 釋放圖片資源
   glBindBuffer(GL_ARRAY_BUFFER, 0);
+  stbi_image_free(data);
 
   glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT); // 設定視口大小
   glfwSetFramebufferSizeCallback(window, frameBufferSizeCallback); // 設定視窗大小改變時的callback
@@ -74,6 +99,7 @@ int main() {
     ourShader.use();
 
     // 繪製物件
+    glBindTexture(GL_TEXTURE_2D, texture);
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);

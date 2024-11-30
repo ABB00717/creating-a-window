@@ -112,9 +112,8 @@ int main() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // 設定清除顏色
     glClear(GL_COLOR_BUFFER_BIT); // 清除顏色緩衝
     glUseProgram(shaderProgram);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-    glBindVertexArray(0);
     glBindVertexArray(0);
 
     glfwSwapBuffers(window); // 雙緩衝區交換

@@ -43,20 +43,30 @@ int main() {
   Shader ourShader("./shader.vs", "./shader.fs");
 
   // 讀取圖片
+  stbi_set_flip_vertically_on_load(true);
   int width, height, nrChannels;
-  unsigned char* data = stbi_load("./container.jpg", &width, &height, &nrChannels, 0);
+  unsigned char* containerImg = stbi_load("./container.jpg", &width, &height, &nrChannels, 0);
+  unsigned char* happyFaceImg = stbi_load("./awesomeface.png", &width, &height, &nrChannels, 0);
 
   // 生成紋理以及Mipmap
-  unsigned int texture;
-  glGenTextures(1, &texture);
-  glBindTexture(GL_TEXTURE_2D, texture);
+  unsigned int texture1, texture2;
+  glGenTextures(1, &texture1);
+  glBindTexture(GL_TEXTURE_2D, texture1);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
   // 載入紋理
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, containerImg);
+  glGenerateMipmap(GL_TEXTURE_2D);
+  
+  glGenTextures(1, &texture2);
+  glBindTexture(GL_TEXTURE_2D, texture2);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, happyFaceImg);
   glGenerateMipmap(GL_TEXTURE_2D);
 
   // 綁定 VBO, VAO, EBO
@@ -83,7 +93,8 @@ int main() {
 
   // 解綁 VBO, VAO, EBO, 釋放圖片資源
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  stbi_image_free(data);
+  stbi_image_free(containerImg);
+  stbi_image_free(happyFaceImg);
 
   glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT); // 設定視口大小
   glfwSetFramebufferSizeCallback(window, frameBufferSizeCallback); // 設定視窗大小改變時的callback
@@ -95,11 +106,16 @@ int main() {
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // 設定清除顏色
     glClear(GL_COLOR_BUFFER_BIT); // 清除顏色緩衝
 
-    // 啟動著色器
+    // 啟動著色器並綁定紋理
     ourShader.use();
+    ourShader.setInt("texture1", 0);
+    ourShader.setInt("texture2", 1);
 
     // 繪製物件
-    glBindTexture(GL_TEXTURE_2D, texture);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, texture1);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, texture2);
     glBindVertexArray(VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
     glBindVertexArray(0);

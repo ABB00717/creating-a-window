@@ -14,11 +14,11 @@
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 800;
 float vertices[] = {
-  //     ---- 位置 ----       ---- 顏色 ----     - 紋理坐標 -
-       0.5f,  0.5f, 0.0f,   1.0f, 0.0f, 0.0f,   1.0f, 1.0f,   // 右上
-       0.5f, -0.5f, 0.0f,   0.0f, 1.0f, 0.0f,   1.0f, 0.0f,   // 右下
-      -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, 1.0f,   0.0f, 0.0f,   // 左下
-      -0.5f,  0.5f, 0.0f,   1.0f, 1.0f, 0.0f,   0.0f, 1.0f    // 左上
+  //     ---- 位置 ----       - 紋理坐標 -
+       0.5f,  0.5f, 0.0f,    1.0f, 1.0f,   // 右上
+       0.5f, -0.5f, 0.0f,    1.0f, 0.0f,   // 右下
+      -0.5f, -0.5f, 0.0f,    0.0f, 0.0f,   // 左下
+      -0.5f,  0.5f, 0.0f,    0.0f, 1.0f    // 左上
 };
 unsigned int indices[] = {
   0, 1, 2,
@@ -63,14 +63,11 @@ int main() {
 
   // 告訴OpenGL如何解析頂點數據
   // 位置屬性
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)0);
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)0);
   glEnableVertexAttribArray(0);
-  // 顏色屬性
-  glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(3*sizeof(float)));
-  glEnableVertexAttribArray(1);
   // 紋理坐標屬性
-  glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float)));
-  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5*sizeof(float), (void*)(3*sizeof(float)));
+  glEnableVertexAttribArray(1);
 
   // 解綁 VBO, VAO, EBO
   glBindBuffer(GL_ARRAY_BUFFER, 0);

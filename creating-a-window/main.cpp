@@ -14,15 +14,47 @@
 const int SCREEN_WIDTH = 800;
 const int SCREEN_HEIGHT = 800;
 float vertices[] = {
-  //     ---- 位置 ----       - 紋理坐標 -
-       0.5f,  0.5f, 0.0f,    1.0f, 1.0f,   // 右上
-       0.5f, -0.5f, 0.0f,    1.0f, 0.0f,   // 右下
-      -0.5f, -0.5f, 0.0f,    0.0f, 0.0f,   // 左下
-      -0.5f,  0.5f, 0.0f,    0.0f, 1.0f    // 左上
-};
-unsigned int indices[] = {
-  0, 1, 2,
-  0, 2, 3
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+     0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+     0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+    -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+    -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
 };
 
 void frameBufferSizeCallback(GLFWwindow* window, int width, int height);
@@ -57,9 +89,6 @@ int main() {
   glGenBuffers(1, &VBO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-  glGenBuffers(1, &EBO);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
   // 告訴OpenGL如何解析頂點數據
   // 位置屬性
@@ -80,7 +109,7 @@ int main() {
     // 渲染指令
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // 線框模式
     glClearColor(0.2f, 0.3f, 0.3f, 1.0f); // 設定清除顏色
-    glClear(GL_COLOR_BUFFER_BIT); // 清除顏色緩衝
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); // 清除顏色緩衝
 
     // 啟動著色器並綁定紋理
     ourShader.use();
@@ -102,12 +131,13 @@ int main() {
     glUniformMatrix4fv(projectionLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
     // 繪製物件
+    glEnable(GL_DEPTH_TEST);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, texture1);
     glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texture2);
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+    glDrawArrays(GL_TRIANGLES, 0, 36);
     glBindVertexArray(0);
 
     glfwSwapBuffers(window); // 雙緩衝區交換
@@ -130,7 +160,7 @@ void processInput(GLFWwindow* window) {
 
 void generateTexture(unsigned int* texture, const char* imgPath) {
   // 讀取圖片
-  stbi_set_flip_vertically_on_load(true);
+  // xstbi_set_flip_vertically_on_load(true);
   int width, height, nrChannels;
   unsigned char* data = stbi_load(imgPath, &width, &height, &nrChannels, 0);
   // 生成紋理以及Mipmap

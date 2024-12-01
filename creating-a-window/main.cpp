@@ -74,9 +74,12 @@ glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+float lastX = SCREEN_WIDTH/2, lastY = SCREEN_HEIGHT/2;
+float yaw = -90.0f, pitch = 0.0f;
 
 void frameBufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
+void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void generateTexture(unsigned int* texture, const char* imgPath);
 
 int main() {
@@ -90,6 +93,8 @@ int main() {
   GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Learn OpenGL", nullptr, nullptr);
   if (window==nullptr) return -1;
   glfwMakeContextCurrent(window);
+  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+  glfwSetCursorPosCallback(window, mouse_callback);
 
   // Init Glad
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) return false;
@@ -173,22 +178,44 @@ void frameBufferSizeCallback(GLFWwindow* window, int width, int height) {
 }
 
 void processInput(GLFWwindow* window) {
-  float cameraSpeed = 2.5f * deltaTime;
+  float cameraSpeed = 7.5f * deltaTime;
   float currentFrame = glfwGetTime();
   deltaTime = currentFrame-lastFrame;
   lastFrame = currentFrame;
 
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE)==GLFW_PRESS) {
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE)==GLFW_PRESS)
     glfwSetWindowShouldClose(window, true);
-  } else if (glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS) {
-    cameraPos += cameraSpeed*cameraFront;
-  } else if (glfwGetKey(window, GLFW_KEY_S)==GLFW_PRESS) {
-    cameraPos -= cameraSpeed*cameraFront;
-  } else if (glfwGetKey(window, GLFW_KEY_A)==GLFW_PRESS) {
+  if (glfwGetKey(window, GLFW_KEY_W)==GLFW_PRESS)
+    cameraPos += cameraSpeed*glm::vec3(cameraFront.x, 0, cameraFront.z);
+  if (glfwGetKey(window, GLFW_KEY_S)==GLFW_PRESS)
+    cameraPos -= cameraSpeed*glm::vec3(cameraFront.x, 0, cameraFront.z);
+  if (glfwGetKey(window, GLFW_KEY_A)==GLFW_PRESS)
     cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp))*cameraSpeed;
-  } else if (glfwGetKey(window, GLFW_KEY_D)==GLFW_PRESS) {
+  if (glfwGetKey(window, GLFW_KEY_D)==GLFW_PRESS)
     cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp))*cameraSpeed;
-  }
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
+  float xoffset = xpos-lastX;
+  float yoffset = lastY-ypos;
+  lastX = xpos;
+  lastY = ypos;
+
+  float sensitivity = 0.4f;
+  xoffset *= sensitivity;
+  yoffset *= sensitivity;
+
+  yaw += xoffset;
+  pitch += yoffset;
+
+  if (pitch>89.0f) pitch = 89.0f;
+  if (pitch<-89.0f) pitch = -89.0f;
+
+  glm::vec3 front;
+  front.x = cos(glm::radians(yaw))*cos(glm::radians(pitch));
+  front.y = sin(glm::radians(pitch));
+  front.z = sin(glm::radians(yaw))*cos(glm::radians(pitch));
+  cameraFront = glm::normalize(front);
 }
 
 void generateTexture(unsigned int* texture, const char* imgPath) {

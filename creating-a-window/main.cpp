@@ -72,6 +72,7 @@ glm::vec3 cubePositions[] = {
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 3.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+float fov = 45.0f;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 float lastX = SCREEN_WIDTH/2, lastY = SCREEN_HEIGHT/2;
@@ -80,6 +81,7 @@ float yaw = -90.0f, pitch = 0.0f;
 void frameBufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void generateTexture(unsigned int* texture, const char* imgPath);
 
 int main() {
@@ -95,6 +97,7 @@ int main() {
   glfwMakeContextCurrent(window);
   glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
   glfwSetCursorPosCallback(window, mouse_callback);
+  glfwSetScrollCallback(window, scroll_callback);
 
   // Init Glad
   if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) return false;
@@ -142,7 +145,7 @@ int main() {
     glm::mat4 view = glm::mat4(1.0f);
     view = glm::lookAt(cameraPos, cameraPos+cameraFront, cameraUp);
     glm::mat4 projection = glm::mat4(1.0f);
-    projection = glm::perspective(glm::radians(45.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT, 0.1f, 100.0f);
+    projection = glm::perspective(glm::radians(fov), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT, 0.1f, 100.0f);
 
     unsigned int viewLoc = glGetUniformLocation(ourShader.ID, "view");
     unsigned int projectionLoc = glGetUniformLocation(ourShader.ID, "projection");
@@ -216,6 +219,12 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos) {
   front.y = sin(glm::radians(pitch));
   front.z = sin(glm::radians(yaw))*cos(glm::radians(pitch));
   cameraFront = glm::normalize(front);
+}
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
+  if (fov>=1.0f&&fov<=45.0f) fov -= yoffset;
+  if (fov<=1.0f) fov = 1.0f;
+  if (fov>=45.0f) fov = 45.0f;
 }
 
 void generateTexture(unsigned int* texture, const char* imgPath) {

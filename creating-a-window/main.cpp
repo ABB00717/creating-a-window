@@ -24,6 +24,7 @@ unsigned int indices[] = {
 
 void frameBufferSizeCallback(GLFWwindow* window, int width, int height);
 void processInput(GLFWwindow* window);
+void generateTexture(unsigned int* texture, const char* imgPath);
 
 int main() {
   // Init GLFW
@@ -42,32 +43,9 @@ int main() {
 
   Shader ourShader("./shader.vs", "./shader.fs");
 
-  // 讀取圖片
-  stbi_set_flip_vertically_on_load(true);
-  int width, height, nrChannels;
-  unsigned char* containerImg = stbi_load("./container.jpg", &width, &height, &nrChannels, 0);
-  unsigned char* happyFaceImg = stbi_load("./awesomeface.png", &width, &height, &nrChannels, 0);
-
-  // 生成紋理以及Mipmap
   unsigned int texture1, texture2;
-  glGenTextures(1, &texture1);
-  glBindTexture(GL_TEXTURE_2D, texture1);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  // 載入紋理
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, containerImg);
-  glGenerateMipmap(GL_TEXTURE_2D);
-  
-  glGenTextures(1, &texture2);
-  glBindTexture(GL_TEXTURE_2D, texture2);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, happyFaceImg);
-  glGenerateMipmap(GL_TEXTURE_2D);
+  generateTexture(&texture1, "./container.jpg");
+  generateTexture(&texture2, "./awesomeface.png");
 
   // 綁定 VBO, VAO, EBO
   unsigned int VBO, VAO, EBO;
@@ -91,10 +69,8 @@ int main() {
   glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8*sizeof(float), (void*)(6*sizeof(float)));
   glEnableVertexAttribArray(2);
 
-  // 解綁 VBO, VAO, EBO, 釋放圖片資源
+  // 解綁 VBO, VAO, EBO
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  stbi_image_free(containerImg);
-  stbi_image_free(happyFaceImg);
 
   glViewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT); // 設定視口大小
   glfwSetFramebufferSizeCallback(window, frameBufferSizeCallback); // 設定視窗大小改變時的callback
@@ -136,4 +112,30 @@ void processInput(GLFWwindow* window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE)==GLFW_PRESS) {
     glfwSetWindowShouldClose(window, true);
   }
+}
+
+void generateTexture(unsigned int* texture, const char* imgPath) {
+  // 讀取圖片
+  stbi_set_flip_vertically_on_load(true);
+  int width, height, nrChannels;
+  unsigned char* data = stbi_load(imgPath, &width, &height, &nrChannels, 0);
+  // 生成紋理以及Mipmap
+  glGenTextures(1, texture);
+  glBindTexture(GL_TEXTURE_2D, *texture);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+  // 載入紋理
+  if (data) {
+    if (nrChannels==4)
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+    else if (nrChannels==3)
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+  } else {
+    std::cout<<"Failed to load texture"<<std::endl;
+  }
+  stbi_image_free(data);
 }
